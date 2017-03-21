@@ -1,0 +1,6 @@
+[package]
+name = "concurrency-patterns-in-rust"
+version = "0.1.0"
+authors = ["Dan Munckton <dan@cultivatehq.com>"]
+
+[dependencies]

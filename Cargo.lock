@@ -1,0 +1,4 @@
+[root]
+name = "concurrency-patterns-in-rust"
+version = "0.1.0"
+
