@@ -1,5 +1,5 @@
 [root]
-name = "concurrency-patterns-in-rust"
+name = "go-concurrency-patterns-in-rust"
 version = "0.1.0"
 dependencies = [
  "rand 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)",
