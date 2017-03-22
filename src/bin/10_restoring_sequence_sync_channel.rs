@@ -1,21 +1,21 @@
 /*
- * Note in this implementation the producers frequently seem to swap around e.g.:
+ * Note in this implementation the producers do not swap around e.g.:
  *
  * Joe 0
  * Ann 0
- * Ann 1
  * Joe 1
+ * Ann 1
  * Joe 2
  * Ann 2
  *
- * Because the continuation `send` calls do NOT block it is possible for the second thread to jump
+ * Because the continuation `send` calls DO block it is NOT possible for the second thread to jump
  * ahead and be the next to post a message.
  */
 
 extern crate rand;
 
 use std::{thread, time};
-use std::sync::mpsc::{channel, Receiver, Sender};
+use std::sync::mpsc::{channel, sync_channel, Receiver, SyncSender};
 use rand::{thread_rng, Rng};
 
 fn main() {
@@ -26,7 +26,7 @@ fn main() {
         let msg2 = c.recv().expect("msg2");
         println!("{}", msg1.message);
         println!("{}", msg2.message);
-        // Send the continuation messages. These don't block.
+        // Send the continuation messages. These block until the receiver reads.
         msg1.tx_continue.send(true).expect("msg1");
         msg2.tx_continue.send(true).expect("msg2");
     }
@@ -54,13 +54,15 @@ struct Message {
     message: String,
     /// The producing thread will block until the receiving thread sends a continuation message
     /// over this channel
-    tx_continue: Sender<bool>,
+    tx_continue: SyncSender<bool>,
 }
 
 fn boring(message: &str) -> Receiver<Message> {
     let message_for_closure = message.to_owned();
     let (tx, rx) = channel();
-    let (tx_continue, rx_continue) = channel();
+
+    // Sets the buffer size to 0 to create a 'rendezvous' channel.
+    let (tx_continue, rx_continue) = sync_channel(0);
 
     thread::spawn(move || {
         for i in 0.. {
