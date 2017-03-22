@@ -22,10 +22,13 @@ fn main() {
     let c = fan_in(boring("Joe"), boring("Ann"));
 
     for _ in 0..10 {
+        // Retrieve 2 messages at a time from queue
         let msg1 = c.recv().expect("msg1");
         let msg2 = c.recv().expect("msg2");
+
         println!("{}", msg1.message);
         println!("{}", msg2.message);
+
         // Send the continuation messages. These block until the receiver reads.
         msg1.tx_continue.send(true).expect("msg1");
         msg2.tx_continue.send(true).expect("msg2");
