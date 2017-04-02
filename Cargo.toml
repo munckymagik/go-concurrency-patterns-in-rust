@@ -5,3 +5,4 @@ authors = ["Dan Munckton <dan@cultivatehq.com>"]
 
 [dependencies]
 rand = "0.3.15"
+chan = "0.1.19"
