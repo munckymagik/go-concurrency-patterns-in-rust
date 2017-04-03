@@ -7,3 +7,4 @@ authors = ["Dan Munckton <dan@cultivatehq.com>"]
 rand = "0.3.15"
 chan = "0.1.19"
 futures = "0.1.11"
+futures-cpupool = "0.1.5"
