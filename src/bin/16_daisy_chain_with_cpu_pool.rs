@@ -5,13 +5,14 @@ use futures::Future;
 use futures::future::join_all;
 use futures::sync::oneshot::{self,Sender,Receiver};
 
-fn f(i: usize, left: Sender<i64>, right: Receiver<i64>) -> Result<(), i64> {
+fn f(i: usize, left: Sender<i64>, right: Receiver<i64>) -> Result<(), futures::Canceled> {
     println!("{} f one", i);
-    let val = right.wait().expect("wait problem");
-    println!("{} f two", i);
-    left.send(val + 1).expect("receiver hung up already");
-    println!("{} f three", i);
-    Ok(())
+    right.map(|val| {
+        println!("{} f two", i);
+        let r = left.send(val + 1).expect("problem sending on");
+        println!("{} f three", i);
+        r
+    }).wait()
 }
 
 fn main() {
@@ -29,15 +30,18 @@ fn main() {
 
     let start = pool.spawn_fn(move || {
         println!("Sending 1st");
-        rightmost_sender.send(1).unwrap(); //.expect("1st receiver hung up already");
-        println!("1st sent");
+        rightmost_sender.send(1).map(|_| {
+            println!("1st sent");
+        }).expect("send failed");
         Ok(())
     });
 
     let last = pool.spawn_fn(move || {
         println!("Waiting to receive result ...");
-        println!("RESULT: {}", leftmost_receiver.wait().unwrap());
-        Ok(())
+        leftmost_receiver.map(|result| {
+            println!("RESULT: {}", result);
+            result
+        }).wait()
     });
 
     start.and_then(|_| join_all(futures))
