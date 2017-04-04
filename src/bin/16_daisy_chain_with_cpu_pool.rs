@@ -1,20 +1,19 @@
 extern crate futures;
 extern crate futures_cpupool;
 
-use futures::Future;
+use futures::{BoxFuture, Future};
 use futures::future::join_all;
-// use futures::sync::oneshot::{self,Sender,Receiver};
-use futures::sync::oneshot;
+use futures::sync::oneshot::{self,Sender,Receiver};
 
-// fn f(i: usize, left: Sender<i64>, right: Receiver<i64>) -> Result<(), futures::Canceled> {
-//     println!("{} f one", i);
-//     right.map(|val| {
-//         println!("{} f two", i);
-//         let r = left.send(val + 1).expect("problem sending on");
-//         println!("{} f three", i);
-//         r
-//     }).wait()
-// }
+fn f(i: usize, left: Sender<i64>, right: Receiver<i64>) -> BoxFuture<(), futures::Canceled> {
+    println!("{} f one", i);
+    right.map(move |val| {
+        println!("{} f two", i);
+        let r = left.send(val + 1).expect("problem sending on");
+        println!("{} f three", i);
+        r
+    }).boxed()
+}
 
 fn main() {
     let pool = futures_cpupool::Builder::new().create();
@@ -24,15 +23,7 @@ fn main() {
 
     for i in 0..n {
         let (next_sender, this_receiver) = oneshot::channel::<i64>();
-        let future = pool.spawn_fn(move || {
-            println!("{} f one", i);
-            this_receiver.map(|val| {
-                println!("{} f two", val);
-                let r = rightmost_sender.send(val + 1).expect("problem sending on");
-                println!("{} f three", val);
-                r
-            })
-        });
+        let future = pool.spawn_fn(move || f(i, rightmost_sender, this_receiver));
         futures.push(future);
         rightmost_sender = next_sender;
     }
