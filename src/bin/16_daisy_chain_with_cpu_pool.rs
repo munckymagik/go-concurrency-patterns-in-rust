@@ -40,12 +40,13 @@ fn main() {
         println!("Waiting to receive result ...");
         leftmost_receiver.map(|result| {
             println!("RESULT: {}", result);
-            result
-        }).wait()
+        })
     });
 
-    start.and_then(|_| join_all(futures))
-        .and_then(|_| last)
+    futures.push(start);
+    futures.push(last);
+
+    join_all(futures)
         .wait()
         .expect("waiting for futures to complete");
 }
