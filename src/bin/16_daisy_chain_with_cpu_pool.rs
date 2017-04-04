@@ -5,13 +5,9 @@ use futures::{BoxFuture, Future};
 use futures::future::join_all;
 use futures::sync::oneshot::{self,Sender,Receiver};
 
-fn f(i: usize, left: Sender<i64>, right: Receiver<i64>) -> BoxFuture<(), futures::Canceled> {
-    println!("{} f one", i);
+fn f(left: Sender<i64>, right: Receiver<i64>) -> BoxFuture<(), futures::Canceled> {
     right.map(move |val| {
-        println!("{} f two", i);
-        let r = left.send(val + 1).expect("problem sending on");
-        println!("{} f three", i);
-        r
+        left.send(val + 1).expect("problem sending on")
     }).boxed()
 }
 
@@ -21,18 +17,15 @@ fn main() {
     let (mut rightmost_sender, leftmost_receiver) = oneshot::channel::<i64>();
     let mut futures = Vec::with_capacity(n);
 
-    for i in 0..n {
+    for _ in 0..n {
         let (next_sender, this_receiver) = oneshot::channel::<i64>();
-        let future = pool.spawn_fn(move || f(i, rightmost_sender, this_receiver));
+        let future = pool.spawn_fn(move || f(rightmost_sender, this_receiver));
         futures.push(future);
         rightmost_sender = next_sender;
     }
 
     let start = pool.spawn_fn(move || {
-        println!("Sending 1st");
-        rightmost_sender.send(1).map(|_| {
-            println!("1st sent");
-        }).expect("send failed");
+        rightmost_sender.send(1).expect("send failed");
         Ok(())
     });
 
