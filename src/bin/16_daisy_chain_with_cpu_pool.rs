@@ -3,11 +3,11 @@ extern crate futures_cpupool;
 
 use futures::{BoxFuture, Future};
 use futures::future::join_all;
-use futures::sync::oneshot::{self,Sender,Receiver};
+use futures::sync::oneshot::{self,Sender,Receiver,Canceled};
 
 fn f(left: Sender<i64>, right: Receiver<i64>) -> BoxFuture<(), futures::Canceled> {
-    right.map(move |val| {
-        left.send(val + 1).expect("problem sending on")
+    right.and_then(move |val| {
+        left.send(val + 1).map_err(|_| Canceled)
     }).boxed()
 }
 
@@ -25,8 +25,7 @@ fn main() {
     }
 
     let start = pool.spawn_fn(move || {
-        rightmost_sender.send(1).expect("send failed");
-        Ok(())
+        rightmost_sender.send(1).map_err(|_| Canceled)
     });
 
     let last = pool.spawn_fn(move || {
