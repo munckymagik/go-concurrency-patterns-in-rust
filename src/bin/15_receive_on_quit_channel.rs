@@ -24,7 +24,7 @@ fn main() {
 
 fn boring(message: &str, quit_channel: (Sender<String>, Receiver<String>)) -> Receiver<String> {
     let message_for_closure = message.to_owned();
-    let (tx, rx) = chan::async();
+    let (tx, rx) = chan::r#async();
 
     thread::spawn(move || {
         let (quit_tx, quit_rx) = quit_channel;

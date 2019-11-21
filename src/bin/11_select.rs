@@ -29,7 +29,7 @@ fn main() {
 }
 
 fn fan_in<T: 'static + Send>(input1: Receiver<T>, input2: Receiver<T>) -> Receiver<T> {
-    let (tx, rx) = chan::async();
+    let (tx, rx) = chan::r#async();
 
     thread::spawn(move || loop {
         chan_select! {
@@ -51,7 +51,7 @@ struct Message {
 
 fn boring(message: &str) -> Receiver<Message> {
     let message_for_closure = message.to_owned();
-    let (tx, rx) = chan::async();
+    let (tx, rx) = chan::r#async();
 
     // Sets the buffer size to 0 to create a 'rendezvous' channel.
     let (tx_continue, rx_continue) = chan::sync(0);
