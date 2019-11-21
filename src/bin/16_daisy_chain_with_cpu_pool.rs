@@ -5,6 +5,8 @@ use futures::future::join_all;
 use futures::sync::oneshot::{self, Canceled, Receiver, Sender};
 use futures::{BoxFuture, Future};
 
+mod helpers;
+
 fn f(left: Sender<i64>, right: Receiver<i64>) -> BoxFuture<(), futures::Canceled> {
     right
         .and_then(move |val| left.send(val + 1).map_err(|_| Canceled))

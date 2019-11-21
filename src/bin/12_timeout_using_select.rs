@@ -5,6 +5,8 @@ use chan::Receiver;
 use rand::{thread_rng, Rng};
 use std::{thread, time};
 
+mod helpers;
+
 fn main() {
     let c = boring("Joe");
     let duration = time::Duration::from_millis(500);
@@ -29,13 +31,9 @@ fn boring(message: &str) -> Receiver<String> {
     thread::spawn(move || {
         for i in 0.. {
             tx.send(format!("{} {}", message_for_closure, i));
-            sleep(thread_rng().gen_range(0, 1000));
+            helpers::sleep(thread_rng().gen_range(0, 1000));
         }
     });
 
     rx
-}
-
-fn sleep(dur_ms: u64) {
-    thread::sleep(time::Duration::from_millis(dur_ms));
 }

@@ -5,7 +5,9 @@ use futures::future::join_all;
 use futures::Future;
 use futures_cpupool::{CpuFuture, CpuPool};
 use rand::{thread_rng, Rng};
-use std::{thread, time};
+use std::time;
+
+mod helpers;
 
 struct FakeSearch {
     kind: String,
@@ -19,7 +21,7 @@ impl FakeSearch {
     }
 
     fn call(&self, query: &str) -> String {
-        util::sleep(thread_rng().gen_range(0, 100));
+        helpers::sleep(thread_rng().gen_range(0, 100));
         format!("{} result for {}", self.kind, query)
     }
 }
@@ -43,20 +45,6 @@ fn google(pool: &CpuPool, searches: &[&'static FakeSearch], query: &str) -> Vec<
     join_all(futures).wait().unwrap()
 }
 
-mod util {
-    use super::*;
-
-    pub fn sleep(dur_ms: u64) {
-        thread::sleep(time::Duration::from_millis(dur_ms));
-    }
-
-    pub fn to_millis(duration: time::Duration) -> f64 {
-        let sec_ms = duration.as_secs() as f64 * 1e3;
-        let subsec_ms = duration.subsec_nanos() as f64 / 1e6;
-        sec_ms + subsec_ms
-    }
-}
-
 fn main() {
     let pool = CpuPool::new_num_cpus();
     let searches: [&FakeSearch; 3] = [&WEB, &IMAGE, &VIDEO];
@@ -66,5 +54,5 @@ fn main() {
     let elapsed = start.elapsed();
 
     println!("Result: {:#?}", results);
-    println!("Elapsed: {}ms", util::to_millis(elapsed));
+    println!("Elapsed: {}ms", helpers::to_millis(elapsed));
 }

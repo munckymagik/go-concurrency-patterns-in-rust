@@ -1,6 +1,8 @@
 use rand::{thread_rng, Rng};
 use std::sync::mpsc::{channel, Sender};
-use std::{thread, time};
+use std::thread;
+
+mod helpers;
 
 fn main() {
     let (tx, rx) = channel();
@@ -16,10 +18,6 @@ fn boring(msg: &str, tx: Sender<String>) {
     for i in 0.. {
         tx.send(format!("{} {}", msg, i))
             .expect("Failed to send message to channel");
-        sleep(thread_rng().gen_range(0, 1000));
+        helpers::sleep(thread_rng().gen_range(0, 1000));
     }
-}
-
-fn sleep(dur_ms: u64) {
-    thread::sleep(time::Duration::from_millis(dur_ms));
 }

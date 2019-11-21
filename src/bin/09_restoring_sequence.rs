@@ -14,7 +14,9 @@
 
 use rand::{thread_rng, Rng};
 use std::sync::mpsc::{channel, Receiver, Sender};
-use std::{thread, time};
+use std::thread;
+
+mod helpers;
 
 fn main() {
     let c = fan_in(boring("Joe"), boring("Ann"));
@@ -72,7 +74,7 @@ fn boring(message: &str) -> Receiver<Message> {
 
             tx.send(msg).expect("boring send");
 
-            sleep(thread_rng().gen_range(0, 1000));
+            helpers::sleep(thread_rng().gen_range(0, 1000));
 
             // Block here until the receiver has sent a continuation message
             rx_continue.recv().expect("boring wait");
@@ -80,8 +82,4 @@ fn boring(message: &str) -> Receiver<Message> {
     });
 
     rx
-}
-
-fn sleep(dur_ms: u64) {
-    thread::sleep(time::Duration::from_millis(dur_ms));
 }

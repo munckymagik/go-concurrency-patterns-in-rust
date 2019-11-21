@@ -6,6 +6,8 @@ extern crate lazy_static;
 use rand::{thread_rng, Rng};
 use std::{thread, time};
 
+mod helpers;
+
 struct FakeSearch {
     kind: String,
 }
@@ -18,7 +20,7 @@ impl FakeSearch {
     }
 
     fn call(&self, query: &str) -> String {
-        util::sleep(thread_rng().gen_range(0, 100));
+        helpers::sleep(thread_rng().gen_range(0, 100));
         format!("{} result for {}", self.kind, query)
     }
 }
@@ -55,25 +57,11 @@ fn google(query: &str) -> Vec<String> {
     results
 }
 
-mod util {
-    use super::*;
-
-    pub fn sleep(dur_ms: u64) {
-        thread::sleep(time::Duration::from_millis(dur_ms));
-    }
-
-    pub fn to_millis(duration: time::Duration) -> f64 {
-        let sec_ms = duration.as_secs() as f64 * 1e3;
-        let subsec_ms = duration.subsec_nanos() as f64 / 1e6;
-        sec_ms + subsec_ms
-    }
-}
-
 fn main() {
     let start = time::Instant::now();
     let results = google("rust lang");
     let elapsed = start.elapsed();
 
     println!("Result: {:#?}", results);
-    println!("Elapsed: {}ms", util::to_millis(elapsed));
+    println!("Elapsed: {}ms", helpers::to_millis(elapsed));
 }

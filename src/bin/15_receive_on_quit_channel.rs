@@ -3,7 +3,9 @@ extern crate chan;
 
 use chan::{Receiver, Sender};
 use rand::{thread_rng, Rng};
-use std::{thread, time};
+use std::thread;
+
+mod helpers;
 
 fn main() {
     let quit_channel = chan::sync(0);
@@ -37,13 +39,9 @@ fn boring(message: &str, quit_channel: (Sender<String>, Receiver<String>)) -> Re
                     quit_tx.send("See you!".to_owned());
                 },
             }
-            sleep(thread_rng().gen_range(0, 1000));
+            helpers::sleep(thread_rng().gen_range(0, 1000));
         }
     });
 
     rx
-}
-
-fn sleep(dur_ms: u64) {
-    thread::sleep(time::Duration::from_millis(dur_ms));
 }

@@ -3,6 +3,8 @@ use chan;
 use chan::{Receiver, Sender};
 use std::thread;
 
+mod helpers;
+
 // The limit for this example seems to be the maximum number of threads per process, which on
 // my Mac appears to be 2048 and is confirmed by the output of `sysctl kern.num_taskthreads`
 const MAX_THREADS: usize = 2048;
