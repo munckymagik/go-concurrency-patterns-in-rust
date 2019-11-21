@@ -1,5 +1,5 @@
-extern crate futures;
-extern crate futures_cpupool;
+use futures;
+use futures_cpupool;
 
 use futures::{BoxFuture, Future};
 use futures::future::join_all;

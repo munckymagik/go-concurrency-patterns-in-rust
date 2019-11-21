@@ -1,4 +1,4 @@
-extern crate chan;
+use chan;
 
 use std::thread;
 use chan::{Sender, Receiver};

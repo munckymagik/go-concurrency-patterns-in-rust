@@ -1,8 +1,8 @@
-extern crate futures;
-extern crate futures_cpupool;
+
+
 #[macro_use]
 extern crate lazy_static;
-extern crate rand;
+
 
 use futures::Future;
 use futures::future::join_all;

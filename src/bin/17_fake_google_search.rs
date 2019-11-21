@@ -1,6 +1,6 @@
 #[macro_use]
 extern crate lazy_static;
-extern crate rand;
+
 
 use std::{thread, time};
 use rand::{thread_rng, Rng};

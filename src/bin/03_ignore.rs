@@ -1,4 +1,4 @@
-extern crate rand;
+
 
 use std::{thread, time};
 use rand::{thread_rng, Rng};

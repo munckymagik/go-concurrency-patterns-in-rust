@@ -4,7 +4,7 @@
 
 #[macro_use]
 extern crate chan;
-extern crate rand;
+
 
 use std::{thread, time};
 use chan::{Sender, Receiver};
