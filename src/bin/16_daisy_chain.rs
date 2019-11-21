@@ -1,28 +1,33 @@
-use chan;
+use async_std::task;
+use futures::channel::mpsc::{channel, Receiver, Sender};
+use futures::sink::SinkExt;
+use futures::stream::StreamExt;
 
-use chan::{Receiver, Sender};
-use std::thread;
-
-mod helpers;
-
-// The limit for this example seems to be the maximum number of threads per process, which on
-// my Mac appears to be 2048 and is confirmed by the output of `sysctl kern.num_taskthreads`
-const MAX_THREADS: usize = 2048;
-
-fn f(left: Sender<i64>, right: Receiver<i64>) {
-    left.send(right.recv().unwrap() + 1);
+async fn f(mut left: Sender<i64>, mut right: Receiver<i64>) {
+    let val = right.next().await.expect("receiver problem");
+    left.send(val + 1).await.expect("receiver hung up already");
 }
 
 fn main() {
-    let n = MAX_THREADS - 2;
-    let (mut rightmost_sender, leftmost_receiver) = chan::sync::<i64>(0);
+    let n = 10_000; // Note: not limited by OS max threads limit
 
-    for _ in 0..n {
-        let (next_sender, this_receiver) = chan::sync::<i64>(0);
-        thread::spawn(move || f(rightmost_sender, this_receiver));
-        rightmost_sender = next_sender;
-    }
+    task::block_on(async {
+        let (mut rightmost_sender, mut leftmost_receiver) = channel(0);
 
-    thread::spawn(move || rightmost_sender.send(1));
-    println!("{}", leftmost_receiver.recv().unwrap());
+        for _ in 0..(n - 1) {
+            let (next_sender, this_receiver) = channel(0);
+            task::spawn(f(rightmost_sender, this_receiver));
+            rightmost_sender = next_sender;
+        }
+
+        task::spawn(async move { rightmost_sender.send(1).await });
+
+        println!(
+            "{}",
+            leftmost_receiver
+                .next()
+                .await
+                .expect("receiving final value")
+        );
+    });
 }

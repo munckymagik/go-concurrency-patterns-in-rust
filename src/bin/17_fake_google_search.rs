@@ -1,20 +1,15 @@
-#[macro_use]
-extern crate lazy_static;
-
 use rand::{thread_rng, Rng};
 use std::time;
 
 mod helpers;
 
-struct FakeSearch {
-    kind: String,
+struct FakeSearch<'a> {
+    kind: &'a str,
 }
 
-impl FakeSearch {
-    fn new(kind: &str) -> Self {
-        Self {
-            kind: kind.to_owned(),
-        }
+impl<'a> FakeSearch<'a> {
+    const fn new(kind: &'a str) -> Self {
+        Self { kind }
     }
 
     fn call(&self, query: &str) -> String {
@@ -23,11 +18,9 @@ impl FakeSearch {
     }
 }
 
-lazy_static! {
-    static ref WEB: FakeSearch = FakeSearch::new("web");
-    static ref IMAGE: FakeSearch = FakeSearch::new("image");
-    static ref VIDEO: FakeSearch = FakeSearch::new("video");
-}
+static WEB: FakeSearch = FakeSearch::new("web");
+static IMAGE: FakeSearch = FakeSearch::new("image");
+static VIDEO: FakeSearch = FakeSearch::new("video");
 
 fn google(query: &str) -> Vec<String> {
     let mut results = Vec::new();

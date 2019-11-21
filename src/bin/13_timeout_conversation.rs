@@ -1,35 +1,49 @@
-#[macro_use]
-extern crate chan;
-
-use chan::Receiver;
+use async_std::future;
+use async_std::task;
+use futures::channel::mpsc::{channel, Receiver};
+use futures::future::{FusedFuture, FutureExt};
+use futures::select;
+use futures::sink::SinkExt;
+use futures::stream::StreamExt;
 use rand::{thread_rng, Rng};
-use std::{thread, time};
+use std::time;
 
 mod helpers;
 
 fn main() {
-    let c = boring("Joe");
-    let timeout = chan::after(time::Duration::from_secs(5));
+    let mut c = boring("Joe");
+    let mut timeout = timeout_after(5000);
 
-    // The loop will iterate printing Joe's messages until the overall timeout occurs.
-    loop {
-        chan_select! {
-            c.recv() -> s => println!("{}", s.unwrap()),
-            timeout.recv() => {
-                println!("You talk too much.");
-                return;
-            },
+    task::block_on(async {
+        // The loop will iterate printing Joe's messages until the overall timeout occurs.
+        loop {
+            select! {
+                s = c.next() => println!("{}", s.unwrap()),
+                _ = timeout => {
+                    println!("You talk too much.");
+                    return;
+                },
+            }
         }
-    }
+    });
+}
+
+fn timeout_after(ms: u64) -> impl FusedFuture {
+    let duration = time::Duration::from_millis(ms);
+    let never = future::pending::<()>();
+    future::timeout(duration, never).boxed().fuse()
 }
 
 fn boring(message: &str) -> Receiver<String> {
     let message_for_closure = message.to_owned();
-    let (tx, rx) = chan::r#async();
+    let (mut tx, rx) = channel(0);
 
-    thread::spawn(move || {
-        for i in 0.. {
-            tx.send(format!("{} {}", message_for_closure, i));
+    task::spawn(async move {
+        for i in 0i32.. {
+            let msg = format!("{} {}", message_for_closure, i);
+            tx.send(msg)
+                .await
+                .expect("Failed to send message to channel");
             helpers::sleep(thread_rng().gen_range(0, 1000));
         }
     });

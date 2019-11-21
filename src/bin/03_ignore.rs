@@ -1,10 +1,10 @@
+use async_std::task;
 use rand::{thread_rng, Rng};
-use std::thread;
 
 mod helpers;
 
 fn main() {
-    thread::spawn(|| boring());
+    task::spawn(async { boring() });
     println!("I got bored");
 }
 
