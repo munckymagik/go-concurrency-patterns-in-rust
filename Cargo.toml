@@ -2,6 +2,7 @@
 name = "go-concurrency-patterns-in-rust"
 version = "0.1.0"
 authors = ["Dan Munckton <dan@cultivatehq.com>"]
+edition = "2018"
 
 [dependencies]
 rand = "0.3.15"
