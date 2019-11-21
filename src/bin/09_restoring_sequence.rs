@@ -12,7 +12,7 @@
  * ahead and be the next to post a message.
  */
 
-extern crate rand;
+
 
 use std::{thread, time};
 use std::sync::mpsc::{channel, Receiver, Sender};

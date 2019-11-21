@@ -2,7 +2,7 @@
 extern crate chan;
 #[macro_use]
 extern crate lazy_static;
-extern crate rand;
+
 
 use std::{thread, time};
 use rand::{thread_rng, Rng};
@@ -30,7 +30,7 @@ lazy_static! {
 
 fn google(query: &str) -> Vec<String> {
     let mut results = Vec::new();
-    let (sender, receiver) = chan::async();
+    let (sender, receiver) = chan::r#async();
     let searches: [&FakeSearch; 3] = [&WEB, &IMAGE, &VIDEO];
 
     for search in &searches {

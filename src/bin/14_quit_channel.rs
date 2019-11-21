@@ -1,6 +1,6 @@
 #[macro_use]
 extern crate chan;
-extern crate rand;
+
 
 use std::{thread, time};
 use chan::Receiver;
@@ -21,7 +21,7 @@ fn main() {
 
 fn boring(message: &str, quit_rx: Receiver<()>) -> Receiver<String> {
     let message_for_closure = message.to_owned();
-    let (tx, rx) = chan::async();
+    let (tx, rx) = chan::r#async();
 
     thread::spawn(move || {
         for i in 0.. {

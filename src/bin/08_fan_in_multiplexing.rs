@@ -1,4 +1,4 @@
-extern crate rand;
+
 
 use std::{thread, time};
 use std::sync::mpsc::{channel, Receiver};
