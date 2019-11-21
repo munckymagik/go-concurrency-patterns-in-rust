@@ -12,11 +12,9 @@
  * ahead and be the next to post a message.
  */
 
-
-
-use std::{thread, time};
-use std::sync::mpsc::{channel, sync_channel, Receiver, SyncSender};
 use rand::{thread_rng, Rng};
+use std::sync::mpsc::{channel, sync_channel, Receiver, SyncSender};
+use std::{thread, time};
 
 fn main() {
     let c = fan_in(boring("Joe"), boring("Ann"));
@@ -41,13 +39,13 @@ fn fan_in<T: 'static + Send>(input1: Receiver<T>, input2: Receiver<T>) -> Receiv
     let tx2 = tx.clone();
 
     thread::spawn(move || loop {
-                      let msg = input1.recv().expect("input1 recv failed");
-                      tx.send(msg).expect("input1 send failed");
-                  });
+        let msg = input1.recv().expect("input1 recv failed");
+        tx.send(msg).expect("input1 send failed");
+    });
     thread::spawn(move || loop {
-                      let msg = input2.recv().expect("input2 recv failed");
-                      tx2.send(msg).expect("input2 send failed");
-                  });
+        let msg = input2.recv().expect("input2 recv failed");
+        tx2.send(msg).expect("input2 send failed");
+    });
 
     rx
 }

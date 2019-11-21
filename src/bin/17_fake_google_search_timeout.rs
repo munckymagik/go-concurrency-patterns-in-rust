@@ -3,17 +3,18 @@ extern crate chan;
 #[macro_use]
 extern crate lazy_static;
 
-
-use std::{thread, time};
 use rand::{thread_rng, Rng};
+use std::{thread, time};
 
 struct FakeSearch {
-    kind: String
+    kind: String,
 }
 
 impl FakeSearch {
     fn new(kind: &str) -> Self {
-        Self { kind: kind.to_owned() }
+        Self {
+            kind: kind.to_owned(),
+        }
     }
 
     fn call(&self, query: &str) -> String {

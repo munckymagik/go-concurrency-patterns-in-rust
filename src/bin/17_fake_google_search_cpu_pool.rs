@@ -1,22 +1,21 @@
-
-
 #[macro_use]
 extern crate lazy_static;
 
-
-use futures::Future;
 use futures::future::join_all;
-use futures_cpupool::{CpuPool, CpuFuture};
-use std::{thread, time};
+use futures::Future;
+use futures_cpupool::{CpuFuture, CpuPool};
 use rand::{thread_rng, Rng};
+use std::{thread, time};
 
 struct FakeSearch {
-    kind: String
+    kind: String,
 }
 
 impl FakeSearch {
     fn new(kind: &str) -> Self {
-        Self { kind: kind.to_owned() }
+        Self {
+            kind: kind.to_owned(),
+        }
     }
 
     fn call(&self, query: &str) -> String {
@@ -32,11 +31,14 @@ lazy_static! {
 }
 
 fn google(pool: &CpuPool, searches: &[&'static FakeSearch], query: &str) -> Vec<String> {
-    let futures = searches.iter().map(|search| {
-        let search = search.to_owned();
-        let query = query.to_owned();
-        pool.spawn_fn(move || Ok(search.call(&query)))
-    }).collect::<Vec<CpuFuture<String, ()>>>();
+    let futures = searches
+        .iter()
+        .map(|search| {
+            let search = search.to_owned();
+            let query = query.to_owned();
+            pool.spawn_fn(move || Ok(search.call(&query)))
+        })
+        .collect::<Vec<CpuFuture<String, ()>>>();
 
     join_all(futures).wait().unwrap()
 }

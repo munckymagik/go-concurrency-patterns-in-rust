@@ -1,8 +1,6 @@
-
-
-use std::thread;
+use futures::sync::oneshot::{self, Receiver, Sender};
 use futures::Future;
-use futures::sync::oneshot::{self,Sender,Receiver};
+use std::thread;
 
 // The limit for this example seems to be the maximum number of threads per process, which on
 // my Mac appears to be 2048 and is confirmed by the output of `sysctl kern.num_taskthreads`
@@ -23,6 +21,10 @@ fn main() {
         rightmost_sender = next_sender;
     }
 
-    thread::spawn(move || rightmost_sender.send(1).expect("1st receiver hung up already"));
+    thread::spawn(move || {
+        rightmost_sender
+            .send(1)
+            .expect("1st receiver hung up already")
+    });
     println!("{}", leftmost_receiver.wait().unwrap());
 }

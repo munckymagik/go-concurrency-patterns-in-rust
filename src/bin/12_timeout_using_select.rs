@@ -1,10 +1,9 @@
 #[macro_use]
 extern crate chan;
 
-
-use std::{thread, time};
 use chan::Receiver;
 use rand::{thread_rng, Rng};
+use std::{thread, time};
 
 fn main() {
     let c = boring("Joe");
@@ -31,7 +30,7 @@ fn boring(message: &str) -> Receiver<String> {
         for i in 0.. {
             tx.send(format!("{} {}", message_for_closure, i));
             sleep(thread_rng().gen_range(0, 1000));
-        };
+        }
     });
 
     rx

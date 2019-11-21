@@ -8,7 +8,7 @@ fn boring() {
     for i in 0.. {
         println!("boring! {}", i);
         sleep(500);
-    };
+    }
 }
 
 fn sleep(dur_ms: u64) {

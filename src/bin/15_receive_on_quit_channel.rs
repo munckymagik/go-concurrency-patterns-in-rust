@@ -1,10 +1,9 @@
 #[macro_use]
 extern crate chan;
 
-
-use std::{thread, time};
-use chan::{Sender, Receiver};
+use chan::{Receiver, Sender};
 use rand::{thread_rng, Rng};
+use std::{thread, time};
 
 fn main() {
     let quit_channel = chan::sync(0);
@@ -39,7 +38,7 @@ fn boring(message: &str, quit_channel: (Sender<String>, Receiver<String>)) -> Re
                 },
             }
             sleep(thread_rng().gen_range(0, 1000));
-        };
+        }
     });
 
     rx

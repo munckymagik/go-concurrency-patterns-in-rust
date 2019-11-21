@@ -1,14 +1,14 @@
 use futures;
 use futures_cpupool;
 
-use futures::{BoxFuture, Future};
 use futures::future::join_all;
-use futures::sync::oneshot::{self,Sender,Receiver,Canceled};
+use futures::sync::oneshot::{self, Canceled, Receiver, Sender};
+use futures::{BoxFuture, Future};
 
 fn f(left: Sender<i64>, right: Receiver<i64>) -> BoxFuture<(), futures::Canceled> {
-    right.and_then(move |val| {
-        left.send(val + 1).map_err(|_| Canceled)
-    }).boxed()
+    right
+        .and_then(move |val| left.send(val + 1).map_err(|_| Canceled))
+        .boxed()
 }
 
 fn main() {
@@ -24,9 +24,7 @@ fn main() {
         rightmost_sender = next_sender;
     }
 
-    let start = pool.spawn_fn(move || {
-        rightmost_sender.send(1).map_err(|_| Canceled)
-    });
+    let start = pool.spawn_fn(move || rightmost_sender.send(1).map_err(|_| Canceled));
 
     let last = pool.spawn_fn(move || {
         println!("Waiting to receive result ...");
