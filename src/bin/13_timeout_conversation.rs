@@ -1,8 +1,6 @@
 use async_std::future;
 use async_std::task;
 use futures::channel::mpsc::{channel, Receiver};
-use futures::future::{FusedFuture, FutureExt};
-use futures::select;
 use futures::sink::SinkExt;
 use futures::stream::StreamExt;
 
@@ -11,27 +9,20 @@ use std::time;
 mod helpers;
 
 fn main() {
-    let mut c = boring("Joe");
-    let mut timeout = timeout_after(5000);
+    let duration = time::Duration::from_millis(5000);
 
-    task::block_on(async {
-        // The loop will iterate printing Joe's messages until the overall timeout occurs.
-        loop {
-            select! {
-                s = c.next() => println!("{}", s.unwrap()),
-                _ = timeout => {
-                    println!("You talk too much.");
-                    return;
-                },
-            }
+    let fut = future::timeout(duration, async {
+        let mut c = boring("Joe");
+
+        while let Some(s) = c.next().await {
+            println!("{}", s);
         }
     });
-}
 
-fn timeout_after(ms: u64) -> impl FusedFuture {
-    let duration = time::Duration::from_millis(ms);
-    let never = future::pending::<()>();
-    future::timeout(duration, never).boxed().fuse()
+    match task::block_on(fut) {
+        Err(future::TimeoutError { .. }) => println!("You talk too much."),
+        _ => (),
+    };
 }
 
 fn boring(message: &str) -> Receiver<String> {
