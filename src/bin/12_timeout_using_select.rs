@@ -5,7 +5,7 @@ use futures::future::{FusedFuture, FutureExt};
 use futures::select;
 use futures::sink::SinkExt;
 use futures::stream::StreamExt;
-use rand::{thread_rng, Rng};
+
 use std::time;
 
 mod helpers;
@@ -45,7 +45,7 @@ fn boring(message: &str) -> Receiver<String> {
             tx.send(msg)
                 .await
                 .expect("Failed to send message to channel");
-            helpers::sleep(thread_rng().gen_range(0, 1000));
+            task::sleep(helpers::rand_duration(0, 1000)).await;
         }
     });
 

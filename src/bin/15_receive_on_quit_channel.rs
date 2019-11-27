@@ -38,7 +38,7 @@ fn boring(message: &str, quit_channel: (Sender<String>, Receiver<String>)) -> Re
                     quit_tx.send("See you!".to_owned()).unwrap();
                 },
             }
-            helpers::sleep(thread_rng().gen_range(0, 1000));
+            thread::sleep(helpers::rand_duration(0, 1000));
         }
     });
 

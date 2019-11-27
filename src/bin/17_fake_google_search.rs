@@ -1,5 +1,4 @@
-use rand::{thread_rng, Rng};
-use std::time;
+use std::{thread, time};
 
 mod helpers;
 
@@ -13,7 +12,7 @@ impl<'a> FakeSearch<'a> {
     }
 
     fn call(&self, query: &str) -> String {
-        helpers::sleep(thread_rng().gen_range(0, 100));
+        thread::sleep(helpers::rand_duration(0, 100));
         format!("{} result for {}", self.kind, query)
     }
 }

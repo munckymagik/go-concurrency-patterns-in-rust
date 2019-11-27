@@ -2,7 +2,6 @@ use async_std::task;
 use futures::channel::mpsc::{channel, Receiver, Sender};
 use futures::sink::SinkExt;
 use futures::stream::StreamExt;
-use rand::{thread_rng, Rng};
 
 mod helpers;
 
@@ -69,7 +68,7 @@ fn boring(message: &str) -> Receiver<Message> {
 
             tx.send(msg).await.expect("boring send");
 
-            helpers::sleep(thread_rng().gen_range(0, 1000));
+            task::sleep(helpers::rand_duration(0, 1000)).await;
 
             // Pause here until the receiver has sent a continuation message
             rx_continue.next().await.expect("boring wait");

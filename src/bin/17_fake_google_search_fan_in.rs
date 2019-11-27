@@ -2,7 +2,6 @@ use async_std::task;
 use futures::channel::mpsc::channel;
 use futures::sink::SinkExt;
 use futures::stream::StreamExt;
-use rand::{thread_rng, Rng};
 use std::time;
 
 mod helpers;
@@ -16,8 +15,8 @@ impl<'a> FakeSearch<'a> {
         Self { kind }
     }
 
-    fn call(&self, query: &str) -> String {
-        helpers::sleep(thread_rng().gen_range(0, 100));
+    async fn call(&self, query: &str) -> String {
+        task::sleep(helpers::rand_duration(0, 100)).await;
         format!("{} result for {}", self.kind, query)
     }
 }
@@ -37,7 +36,7 @@ async fn google(query: &str) -> Vec<String> {
         let mut sender = sender.to_owned();
 
         task::spawn(async move {
-            let result = search.call(&query);
+            let result = search.call(&query).await;
             sender.send(result).await.unwrap();
         });
     }

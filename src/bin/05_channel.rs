@@ -2,7 +2,6 @@ use async_std::task;
 use futures::channel::mpsc::{channel, Sender};
 use futures::sink::SinkExt;
 use futures::stream::StreamExt;
-use rand::{thread_rng, Rng};
 
 mod helpers;
 
@@ -25,6 +24,6 @@ async fn boring(msg: &str, mut tx: Sender<String>) {
         tx.send(msg_i)
             .await
             .expect("Failed to send message to channel");
-        helpers::sleep(thread_rng().gen_range(0, 1000));
+        task::sleep(helpers::rand_duration(0, 1000)).await;
     }
 }

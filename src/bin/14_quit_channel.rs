@@ -41,7 +41,7 @@ fn boring(message: &str, mut quit_rx: Receiver<()>) -> (JoinHandle<()>, Receiver
                     return
                 },
             }
-            helpers::sleep(thread_rng().gen_range(0, 1000));
+            task::sleep(helpers::rand_duration(0, 1000)).await;
         }
     });
 

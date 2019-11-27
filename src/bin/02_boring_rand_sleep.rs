@@ -1,4 +1,4 @@
-use rand::{thread_rng, Rng};
+use std::thread;
 
 mod helpers;
 
@@ -9,6 +9,6 @@ fn main() {
 fn boring() {
     for i in 0.. {
         println!("boring! {}", i);
-        helpers::sleep(thread_rng().gen_range(0, 1000));
+        thread::sleep(helpers::rand_duration(0, 1000));
     }
 }
