@@ -6,9 +6,6 @@ mod helpers;
 
 fn main() {
     let quit_channel = bounded(0);
-    // Using `ref` to prevent move out of `quit_channel` before we pass to `boring`
-    let (ref quit_tx, ref quit_rx) = quit_channel;
-
     let c = boring("Joe", quit_channel.clone());
 
     // The loop will iterate printing Joe's messages until the overall timeout occurs.
@@ -16,6 +13,7 @@ fn main() {
         println!("{}", c.recv().unwrap());
     }
 
+    let (quit_tx, quit_rx) = quit_channel;
     quit_tx
         .send("Bye!".to_owned())
         .expect("sending quit failed");

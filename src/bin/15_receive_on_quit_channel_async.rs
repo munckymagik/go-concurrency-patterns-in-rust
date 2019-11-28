@@ -10,9 +10,6 @@ mod helpers;
 fn main() {
     task::block_on(async {
         let quit_channel = channel(1);
-        // Using `ref` to prevent move out of `quit_channel` before we pass to `boring`
-        let (ref quit_tx, ref quit_rx) = quit_channel;
-
         let c = boring("Joe", quit_channel.clone());
 
         // The loop will iterate printing Joe's messages until the overall timeout occurs.
@@ -20,6 +17,7 @@ fn main() {
             println!("{}", c.recv().await.expect("receiving from joe"));
         }
 
+        let (quit_tx, quit_rx) = quit_channel;
         quit_tx.send("Bye!".to_owned()).await;
 
         // TODO this is flakey
