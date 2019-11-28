@@ -1,27 +1,35 @@
-use async_std::stream::{StreamExt, TimeoutError};
 use async_std::task;
 use futures::channel::mpsc::{channel, Receiver};
+use futures::future::{FusedFuture, FutureExt};
+use futures::select;
 use futures::sink::SinkExt;
-
+use futures::stream::StreamExt;
+use futures_timer::Delay;
 use std::time;
 
 mod helpers;
 
 fn main() {
-    task::block_on(async {
-        let duration = time::Duration::from_millis(5000);
-        let mut c = boring("Joe").timeout(duration);
+    let mut c = boring("Joe");
+    let mut timeout = timeout_after(5000);
 
-        while let Some(item) = c.next().await {
-            match item {
-                Ok(s) => println!("{}", s),
-                Err(TimeoutError { .. }) => {
+    task::block_on(async {
+        // The loop will iterate printing Joe's messages until the overall timeout occurs.
+        loop {
+            select! {
+                s = c.next() => println!("{}", s.unwrap()),
+                _ = timeout => {
                     println!("You talk too much.");
                     return;
-                }
+                },
             }
         }
     });
+}
+
+fn timeout_after(ms: u64) -> impl FusedFuture {
+    let duration = time::Duration::from_millis(ms);
+    Delay::new(duration).boxed().fuse()
 }
 
 fn boring(message: &str) -> Receiver<String> {
