@@ -17,7 +17,7 @@ fn main() {
         for _ in 0i32..5 {
             println!(
                 "You say: {}",
-                receiver.next().await.expect("Receiving failed")
+                receiver.next().await.expect("receiving failed")
             );
         }
     });
@@ -34,10 +34,7 @@ fn boring(message: &str) -> Receiver<String> {
     task::spawn(async move {
         for i in 0i32.. {
             let msg = format!("{} {}", message_for_closure, i);
-            sender
-                .send(msg)
-                .await
-                .expect("Failed to send message to channel");
+            sender.send(msg).await.expect("sending failed");
             task::sleep(helpers::rand_duration(0, 1000)).await;
         }
     });

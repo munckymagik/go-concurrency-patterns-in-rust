@@ -18,8 +18,8 @@ fn main() {
 
     task::block_on(async {
         for _ in 0i32..5 {
-            println!("{}", joe.next().await.expect("Receiving joe failed"));
-            println!("{}", ann.next().await.expect("Receiving ann failed"));
+            println!("{}", joe.next().await.expect("receiving joe failed"));
+            println!("{}", ann.next().await.expect("receiving ann failed"));
         }
     });
 
@@ -33,10 +33,7 @@ fn boring(message: &str) -> Receiver<String> {
     task::spawn(async move {
         for i in 0i32.. {
             let msg = format!("{} {}", message_for_closure, i);
-            sender
-                .send(msg)
-                .await
-                .expect("Failed to send message to channel");
+            sender.send(msg).await.expect("sending failed");
             task::sleep(helpers::rand_duration(0, 1000)).await;
         }
     });
