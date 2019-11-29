@@ -13,3 +13,10 @@ cargo run --bin 01_boring
 cargo run --bin 02_boring_rand_sleep
 # ... and so on.
 ```
+
+## To generate Rust docs for the examples
+
+```bash
+cargo doc --bins --no-deps
+open target/doc/01_boring/index.html
+```

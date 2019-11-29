@@ -1,3 +1,10 @@
+//! Based on Go example
+//! [slide 27: "Multiplexing"](https://talks.golang.org/2012/concurrency.slide#27)
+//!
+//! The previous programs make Joe and Ann count in lockstep.
+//!
+//! We can instead use a fan-in function to let whosoever is ready talk.
+//!
 use async_std::task;
 use futures::channel::mpsc::{channel, Receiver};
 use futures::sink::SinkExt;

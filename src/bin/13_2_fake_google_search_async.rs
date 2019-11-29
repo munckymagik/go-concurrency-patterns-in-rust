@@ -1,3 +1,10 @@
+//! Based on Go example
+//! [slide 46: "Google Search 2.0"](https://talks.golang.org/2012/concurrency.slide#46)
+//!
+//! Run the Web, Image, and Video searches concurrently, and wait for all results.
+//!
+//! No locks.  No condition variables.  No callbacks.
+//!
 use async_std::task;
 use futures::channel::mpsc::channel;
 use futures::sink::SinkExt;
@@ -31,12 +38,16 @@ async fn google(query: &str) -> Vec<String> {
     let searches: [&FakeSearch; 3] = [&WEB, &IMAGE, &VIDEO];
 
     for search in &searches {
+        // Clone values so they can be safely transferred across the threads
         let search = search.to_owned();
         let query = query.to_owned();
         let mut sender = sender.to_owned();
 
         task::spawn(async move {
+            // Perform the search
             let result = search.call(&query).await;
+
+            // Send the result back over the channel
             sender.send(result).await.unwrap();
         });
     }
@@ -45,7 +56,7 @@ async fn google(query: &str) -> Vec<String> {
     // have completed
     drop(sender);
 
-    // Aggregate until the channel closes
+    // Aggregate results until the channel closes
     while let Some(result) = receiver.next().await {
         results.push(result);
     }
