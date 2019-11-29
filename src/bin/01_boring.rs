@@ -1,3 +1,6 @@
+use std::thread;
+use std::time::Duration;
+
 mod helpers;
 
 fn main() {
@@ -7,6 +10,6 @@ fn main() {
 fn boring() {
     for i in 0.. {
         println!("boring! {}", i);
-        helpers::sleep(500);
+        thread::sleep(Duration::from_millis(500));
     }
 }

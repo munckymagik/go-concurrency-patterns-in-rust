@@ -6,7 +6,11 @@ edition = "2018"
 
 [dependencies]
 rand = "0.7.2"
-chan = "0.1.23"
-futures = "0.1.11"
-futures-cpupool = "0.1.5"
-lazy_static = "1.4.0"
+futures = "0.3.1"
+crossbeam-utils = "0.7.0"
+crossbeam-channel = "0.4.0"
+futures-timer = "2.0.2"
+
+[dependencies.async-std]
+version = "1.2.0"
+features = ["unstable"]

@@ -1,18 +1,19 @@
-use rand::{thread_rng, Rng};
+use async_std::task;
 use std::thread;
+use std::time::Duration;
 
 mod helpers;
 
 fn main() {
-    thread::spawn(|| boring());
+    task::spawn(boring());
     println!("I'm listening ...");
-    helpers::sleep(2000);
+    thread::sleep(Duration::from_millis(2000));
     println!("You're boring; I'm leaving.");
 }
 
-fn boring() {
+async fn boring() {
     for i in 0.. {
         println!("boring! {}", i);
-        helpers::sleep(thread_rng().gen_range(0, 1000));
+        task::sleep(helpers::rand_duration(0, 1000)).await;
     }
 }

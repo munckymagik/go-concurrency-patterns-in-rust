@@ -1,9 +1,11 @@
 #![allow(dead_code)]
 
-use std::{thread, time};
+use rand::{thread_rng, Rng};
+use std::time;
 
-pub fn sleep(dur_ms: u64) {
-    thread::sleep(time::Duration::from_millis(dur_ms));
+pub fn rand_duration(from_ms: u64, to_ms: u64) -> time::Duration {
+    let dur_ms = thread_rng().gen_range(from_ms, to_ms);
+    time::Duration::from_millis(dur_ms)
 }
 
 pub fn to_millis(duration: time::Duration) -> f64 {

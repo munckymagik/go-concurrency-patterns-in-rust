@@ -1,41 +1,43 @@
-/*
- * Now using chan_select! from the chan crate in fan_in.
- */
-
-#[macro_use]
-extern crate chan;
-
-use chan::{Receiver, Sender};
-use rand::{thread_rng, Rng};
-use std::thread;
+use async_std::task;
+use futures::channel::mpsc::{channel, Receiver, Sender};
+use futures::select;
+use futures::sink::SinkExt;
+use futures::stream::StreamExt;
 
 mod helpers;
 
 fn main() {
-    let c = fan_in(boring("Joe"), boring("Ann"));
+    let mut c = fan_in(boring("Joe"), boring("Ann"));
 
-    for _ in 0..10 {
-        // Retrieve 2 messages at a time from queue
-        let msg1 = c.recv().expect("channel closed getting msg1");
-        let msg2 = c.recv().expect("channel closed getting msg2");
+    task::block_on(async {
+        for i in 0i32..10 {
+            // Retrieve 2 messages at a time from queue
+            let mut msg1 = c.next().await.expect("msg1");
+            let mut msg2 = c.next().await.expect("msg2");
 
-        println!("{}", msg1.message);
-        println!("{}", msg2.message);
+            println!("{}", msg1.message);
+            println!("{}", msg2.message);
 
-        // Send the continuation messages. These block until the receiver reads.
-        msg1.tx_continue.send(true);
-        msg2.tx_continue.send(true);
-    }
+            if i < 9 {
+                // Send the continuation messages.
+                msg1.tx_continue.send(true).await.expect("msg1");
+                msg2.tx_continue.send(true).await.expect("msg2");
+            }
+        }
+    });
+
     println!("You're both boring; I'm leaving.");
 }
 
-fn fan_in<T: 'static + Send>(input1: Receiver<T>, input2: Receiver<T>) -> Receiver<T> {
-    let (tx, rx) = chan::r#async();
+fn fan_in<T: 'static + Send>(mut input1: Receiver<T>, mut input2: Receiver<T>) -> Receiver<T> {
+    let (mut tx, rx) = channel(0);
 
-    thread::spawn(move || loop {
-        chan_select! {
-            input1.recv() -> msg => tx.send(msg.expect("msg from input1")),
-            input2.recv() -> msg => tx.send(msg.expect("msg from input2")),
+    task::spawn(async move {
+        loop {
+            select! {
+                msg = input1.select_next_some() => tx.send(msg).await.expect("send1 in fan_in"),
+                msg = input2.select_next_some() => tx.send(msg).await.expect("send2 in fan_in"),
+            }
         }
     });
 
@@ -52,24 +54,24 @@ struct Message {
 
 fn boring(message: &str) -> Receiver<Message> {
     let message_for_closure = message.to_owned();
-    let (tx, rx) = chan::r#async();
+    let (mut tx, rx) = channel(0);
 
     // Sets the buffer size to 0 to create a 'rendezvous' channel.
-    let (tx_continue, rx_continue) = chan::sync(0);
+    let (tx_continue, mut rx_continue) = channel(0);
 
-    thread::spawn(move || {
-        for i in 0.. {
+    task::spawn(async move {
+        for i in 0i32.. {
             let msg = Message {
                 message: format!("{} {}", message_for_closure, i),
                 tx_continue: tx_continue.to_owned(),
             };
 
-            tx.send(msg);
+            tx.send(msg).await.expect("boring send");
 
-            helpers::sleep(thread_rng().gen_range(0, 1000));
+            task::sleep(helpers::rand_duration(0, 1000)).await;
 
-            // Block here until the receiver has sent a continuation message
-            rx_continue.recv().expect("boring wait");
+            // Pause here until the receiver has sent a continuation message
+            rx_continue.next().await.expect("boring wait");
         }
     });
 

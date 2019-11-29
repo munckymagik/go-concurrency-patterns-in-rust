@@ -1,22 +1,29 @@
+use async_std::future::{timeout, TimeoutError};
 use async_std::task;
 use futures::channel::mpsc::{channel, Receiver};
 use futures::sink::SinkExt;
 use futures::stream::StreamExt;
 
+use std::time;
+
 mod helpers;
 
 fn main() {
-    let mut joe = boring("Joe");
-    let mut ann = boring("Ann");
+    let mut c = boring("Joe");
+    let duration = time::Duration::from_millis(500);
 
     task::block_on(async {
-        for _ in 0i32..5 {
-            println!("{}", joe.next().await.expect("Receiving joe failed"));
-            println!("{}", ann.next().await.expect("Receiving ann failed"));
+        loop {
+            // In each loop, Joe has up to 500 ms to respond or the program times-out.
+            match timeout(duration, c.next()).await {
+                Ok(s) => println!("{}", s.unwrap()),
+                Err(TimeoutError { .. }) => {
+                    println!("You're too slow.");
+                    return;
+                }
+            }
         }
     });
-
-    println!("You're both boring; I'm leaving.");
 }
 
 fn boring(message: &str) -> Receiver<String> {

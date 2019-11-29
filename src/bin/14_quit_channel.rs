@@ -1,39 +1,49 @@
-#[macro_use]
-extern crate chan;
-
-use chan::Receiver;
+use async_std::task;
+use async_std::task::JoinHandle;
+use futures::channel::mpsc::{channel, Receiver};
+use futures::future::FutureExt;
+use futures::select;
+use futures::sink::SinkExt;
+use futures::stream::StreamExt;
 use rand::{thread_rng, Rng};
-use std::thread;
 
 mod helpers;
 
 fn main() {
-    let (quit_tx, quit_rx) = chan::sync(0);
-    let c = boring("Joe", quit_rx);
+    let (mut quit_tx, quit_rx) = channel(0);
+    let (handle, mut c) = boring("Joe", quit_rx);
 
-    // The loop will iterate printing Joe's messages until the overall timeout occurs.
-    for _ in 0..(thread_rng().gen_range(0, 10)) {
-        println!("{}", c.recv().unwrap());
-    }
+    task::block_on(async {
+        // The loop will iterate printing Joe's messages until the loop finishes.
+        for _ in 0i32..(thread_rng().gen_range(1, 10)) {
+            println!("{}", c.next().await.unwrap());
+        }
 
-    println!("quitting ...");
-    quit_tx.send(());
+        println!("quitting ...");
+        quit_tx.send(()).await.expect("sending quit");
+
+        println!("waiting ...");
+        handle.await;
+    });
 }
 
-fn boring(message: &str, quit_rx: Receiver<()>) -> Receiver<String> {
+fn boring(message: &str, mut quit_rx: Receiver<()>) -> (JoinHandle<()>, Receiver<String>) {
     let message_for_closure = message.to_owned();
-    let (tx, rx) = chan::r#async();
+    let (mut tx, rx) = channel(0);
 
-    thread::spawn(move || {
-        for i in 0.. {
-            let msg_i = format!("{} {}", message_for_closure, i);
-            chan_select! {
-                tx.send(msg_i) => { /* do nothing */ },
-                quit_rx.recv() => return,
+    let handle = task::spawn(async move {
+        for i in 0i32.. {
+            let msg = format!("{} {}", message_for_closure, i);
+            select! {
+                _ = tx.send(msg).fuse() => { /* do nothing */ },
+                _ = quit_rx.next() => {
+                    println!("Ok bye!");
+                    return
+                },
             }
-            helpers::sleep(thread_rng().gen_range(0, 1000));
+            task::sleep(helpers::rand_duration(0, 1000)).await;
         }
     });
 
-    rx
+    (handle, rx)
 }

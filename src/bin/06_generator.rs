@@ -1,27 +1,33 @@
-use rand::{thread_rng, Rng};
-use std::sync::mpsc::{channel, Receiver};
-use std::thread;
+use async_std::task;
+use futures::channel::mpsc::{channel, Receiver};
+use futures::sink::SinkExt;
+use futures::stream::StreamExt;
 
 mod helpers;
 
 fn main() {
-    let rx = boring("boring!");
+    let mut rx = boring("boring!");
 
-    for _ in 0..5 {
-        println!("You say: {}", rx.recv().unwrap());
-    }
+    task::block_on(async {
+        for _ in 0i32..5 {
+            println!("You say: {}", rx.next().await.expect("Receiving failed"));
+        }
+    });
+
     println!("You're boring; I'm leaving.");
 }
 
 fn boring(message: &str) -> Receiver<String> {
     let message_for_closure = message.to_owned();
-    let (tx, rx) = channel();
+    let (mut tx, rx) = channel(0);
 
-    thread::spawn(move || {
-        for i in 0.. {
-            tx.send(format!("{} {}", message_for_closure, i))
+    task::spawn(async move {
+        for i in 0i32.. {
+            let msg = format!("{} {}", message_for_closure, i);
+            tx.send(msg)
+                .await
                 .expect("Failed to send message to channel");
-            helpers::sleep(thread_rng().gen_range(0, 1000));
+            task::sleep(helpers::rand_duration(0, 1000)).await;
         }
     });
 
