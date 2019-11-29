@@ -1,35 +1,31 @@
+//! Also  based on Go example
+//! [slide 36: "Timeout for whole conversation using select"](https://talks.golang.org/2012/concurrency.slide#36),
+//! however this example demonstrates the same pattern using the
+//! [async_std::stream::Stream::timeout](https://docs.rs/async-std/1.2.0/async_std/stream/trait.Stream.html#method.timeout)
+//! combinator.
+use async_std::stream::{StreamExt, TimeoutError};
 use async_std::task;
 use futures::channel::mpsc::{channel, Receiver};
-use futures::future::{FusedFuture, FutureExt};
-use futures::select;
 use futures::sink::SinkExt;
-use futures::stream::StreamExt;
-use futures_timer::Delay;
 use std::time;
 
 mod helpers;
 
 fn main() {
-    let mut c = boring("Joe");
-    let mut timeout = timeout_after(5000);
-
     task::block_on(async {
-        // The loop will iterate printing Joe's messages until the overall timeout occurs.
-        loop {
-            select! {
-                s = c.next() => println!("{}", s.unwrap()),
-                _ = timeout => {
+        let duration = time::Duration::from_millis(5000);
+        let mut c = boring("Joe").timeout(duration);
+
+        while let Some(item) = c.next().await {
+            match item {
+                Ok(s) => println!("{}", s),
+                Err(TimeoutError { .. }) => {
                     println!("You talk too much.");
                     return;
-                },
+                }
             }
         }
     });
-}
-
-fn timeout_after(ms: u64) -> impl FusedFuture {
-    let duration = time::Duration::from_millis(ms);
-    Delay::new(duration).boxed().fuse()
 }
 
 fn boring(message: &str) -> Receiver<String> {

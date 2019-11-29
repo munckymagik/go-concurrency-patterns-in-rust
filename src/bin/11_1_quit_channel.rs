@@ -1,5 +1,9 @@
+//! Based on Go example
+//! [slide 37: "Quit channel"](https://talks.golang.org/2012/concurrency.slide#37)
+//!
+//! Instead of timing out, we can tell Joe to stop when we're tired of listening to him.
+//!
 use async_std::task;
-use async_std::task::JoinHandle;
 use futures::channel::mpsc::{channel, Receiver};
 use futures::future::FutureExt;
 use futures::select;
@@ -11,33 +15,31 @@ mod helpers;
 
 fn main() {
     let (mut quit_tx, quit_rx) = channel(0);
-    let (handle, mut c) = boring("Joe", quit_rx);
+    let mut c = boring("Joe", quit_rx);
 
     task::block_on(async {
-        // The loop will iterate printing Joe's messages until the loop finishes.
         for _ in 0i32..(thread_rng().gen_range(1, 10)) {
             println!("{}", c.next().await.unwrap());
         }
 
-        println!("quitting ...");
+        println!("main: telling Joe to quit ...");
         quit_tx.send(()).await.expect("sending quit");
 
-        println!("waiting ...");
-        handle.await;
+        println!("main: bye!");
     });
 }
 
-fn boring(message: &str, mut quit_rx: Receiver<()>) -> (JoinHandle<()>, Receiver<String>) {
+fn boring(message: &str, mut quit_rx: Receiver<()>) -> Receiver<String> {
     let message_for_closure = message.to_owned();
     let (mut tx, rx) = channel(0);
 
-    let handle = task::spawn(async move {
+    task::spawn(async move {
         for i in 0i32.. {
             let msg = format!("{} {}", message_for_closure, i);
             select! {
                 _ = tx.send(msg).fuse() => { /* do nothing */ },
                 _ = quit_rx.next() => {
-                    println!("Ok bye!");
+                    println!("{}: pretending to clear up ... ok bye!", message_for_closure);
                     return
                 },
             }
@@ -45,5 +47,5 @@ fn boring(message: &str, mut quit_rx: Receiver<()>) -> (JoinHandle<()>, Receiver
         }
     });
 
-    (handle, rx)
+    rx
 }

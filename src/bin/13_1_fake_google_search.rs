@@ -1,3 +1,24 @@
+//! Based on Go example
+//! [slide 42: "Example: Google Search"](https://talks.golang.org/2012/concurrency.slide#42)
+//!
+//! Q: What does Google search do?
+//!
+//! A: Given a query, return a page of search results (and some ads).
+//!
+//! Q: How do we get the search results?
+//!
+//! A: Send the query to Web search, Image search, YouTube, Maps, News,etc., then mix the results.
+//!
+//! How do we implement this?
+//!
+//! We can simulate the search function, much as we simulated conversation before.
+//!
+//! ## Google Search 1.0
+//!
+//! The `google` function takes a query and returns a `Vec` of results (which are just `Strings`).
+//!
+//! `google` invokes WEB, IMAGE, and VIDEO searches serially, appending them to the results.
+//!
 use std::{thread, time};
 
 mod helpers;

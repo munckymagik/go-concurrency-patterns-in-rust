@@ -1,9 +1,17 @@
+//! Also, based on Go example
+//! [slide 35: "Timeout using select"](https://talks.golang.org/2012/concurrency.slide#35),
+//! however this example demonstrates the same pattern using the
+//! [async_std::future::timeout](https://docs.rs/async-std/1.2.0/async_std/future/fn.timeout.html)
+//! combinator.
+//!
+//! It wraps the future returned by `c.next()`, then awaits the delivery of a message or
+//! it times out after the given duration of time.
+//!
 use async_std::future::{timeout, TimeoutError};
 use async_std::task;
 use futures::channel::mpsc::{channel, Receiver};
 use futures::sink::SinkExt;
 use futures::stream::StreamExt;
-
 use std::time;
 
 mod helpers;

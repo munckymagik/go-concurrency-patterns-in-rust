@@ -1,3 +1,10 @@
+//! Based on Go example
+//! [slide 36: "Timeout for whole conversation using select"](https://talks.golang.org/2012/concurrency.slide#36)
+//!
+//! Create the timer once, outside the loop, to time out the entire conversation.
+//!
+//! (In the previous program, we had a timeout for each message.)
+//!
 use async_std::task;
 use futures::channel::mpsc::{channel, Receiver};
 use futures::future::{FusedFuture, FutureExt};
@@ -5,23 +12,21 @@ use futures::select;
 use futures::sink::SinkExt;
 use futures::stream::StreamExt;
 use futures_timer::Delay;
-
 use std::time;
 
 mod helpers;
 
 fn main() {
     let mut c = boring("Joe");
+    let mut timeout = timeout_after(5000);
 
     task::block_on(async {
+        // The loop will iterate printing Joe's messages until the overall timeout occurs.
         loop {
-            // In each loop, Joe has up to 500 ms to respond or the programme times-out.
-            let mut timeout = timeout_after(500);
-
             select! {
                 s = c.next() => println!("{}", s.unwrap()),
                 _ = timeout => {
-                    println!("You're too slow.");
+                    println!("You talk too much.");
                     return;
                 },
             }

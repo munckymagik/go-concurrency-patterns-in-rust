@@ -1,3 +1,10 @@
+//! Based on Go example
+//! [slide 26: "Channels as a handle on a service"](https://talks.golang.org/2012/concurrency.slide#26)
+//!
+//! Our boring function returns a `Receiver` for a channel that lets us communicate with the boring service it provides.
+//!
+//! We can have more instances of the service.
+//!
 use async_std::task;
 use futures::channel::mpsc::{channel, Receiver};
 use futures::sink::SinkExt;
@@ -6,8 +13,8 @@ use futures::stream::StreamExt;
 mod helpers;
 
 fn main() {
-    let mut joe = boring("Joe");
-    let mut ann = boring("Ann");
+    let mut joe = boring("Joe"); // first service
+    let mut ann = boring("Ann"); // second service
 
     task::block_on(async {
         for _ in 0i32..5 {

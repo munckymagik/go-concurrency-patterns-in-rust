@@ -1,6 +1,11 @@
-// In this version we hard-limit the search to 80ms and only return results
-// successfully collected in that time
-
+//! Based on Go example
+//! [slide 47: "Google Search 2.1"](https://talks.golang.org/2012/concurrency.slide#47)
+//!
+//! Don't wait for slow servers. No locks.  No condition variables.  No callbacks.
+//!
+//! In this version we hard-limit the search to 80ms and only return results
+//! successfully collected in that time.
+//!
 use async_std::future;
 use async_std::task;
 use futures::channel::mpsc::channel;
@@ -37,16 +42,22 @@ async fn google(query: &str) -> Vec<String> {
     let searches: [&FakeSearch; 3] = [&WEB, &IMAGE, &VIDEO];
 
     for search in &searches {
+        // Clone values so they can be safely transferred across the threads
         let search = search.to_owned();
         let query = query.to_owned();
         let mut sender = sender.to_owned();
 
         task::spawn(async move {
+            // Perform the search
             let result = search.call(&query).await;
+
+            // Send the result back over the channel
             sender.send(result).await.unwrap();
         });
     }
 
+    // The searches have 80ms to report back or we just return whatever results
+    // we have (which could be none).
     let mut timeout = timeout_after(80);
     for _ in 0..searches.len() {
         select! {
