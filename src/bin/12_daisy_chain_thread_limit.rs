@@ -9,7 +9,7 @@
 //! pattern, as the length of the chain is limited by the maximum number of
 //! threads per process configured in your operating system.
 //!
-use crossbeam_channel::{bounded, Receiver, Sender};
+use std::sync::mpsc::{sync_channel, Receiver, SyncSender};
 use std::thread;
 
 // The limit for this example seems to be the maximum number of threads per
@@ -17,7 +17,7 @@ use std::thread;
 // of `sysctl kern.num_taskthreads`
 const MAX_THREADS: usize = 2048;
 
-fn f(left: Sender<i64>, right: Receiver<i64>) {
+fn f(left: SyncSender<i64>, right: Receiver<i64>) {
     left.send(right.recv().unwrap() + 1)
         .expect("sending failed in f");
 }
@@ -29,12 +29,12 @@ fn main() {
     // the chain rightmost_sender will be continually updated to point to the
     // furthest front of the chain, until finally it points to the start of the
     // chain.
-    let (mut rightmost_sender, leftmost_receiver) = bounded(0);
+    let (mut rightmost_sender, leftmost_receiver) = sync_channel(0);
 
     for _ in 1..n {
         // Create a channel. This will form the connection between one link in
         // the chain and the next.
-        let (next_sender, this_receiver) = bounded(0);
+        let (next_sender, this_receiver) = sync_channel(0);
 
         // Create a worker thread for this link in the chain.
         thread::spawn(move || f(rightmost_sender, this_receiver));
