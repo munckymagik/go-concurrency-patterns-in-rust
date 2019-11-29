@@ -10,9 +10,9 @@
 //! so we have a single slot
 //! (see [futures::channel::mpsc::channel](https://docs.rs/futures/0.3.1/futures/channel/mpsc/fn.channel.html)).
 //!
-//! When the main function executes `rx.next().await`, it will wait for a message to exist in the channel.
+//! When the main function executes `receiver.next().await`, it will wait for a message to exist in the channel.
 //!
-//! Similarly, when the boring function executes `tx.send(msg_i).await`, it waits until the
+//! Similarly, when the boring function executes `sender.send(msg_i).await`, it waits until the
 //! message has been fully queued into the channel. Because we are using a bounded channel it will wait until any
 //! previous message has been read.
 //!
@@ -28,22 +28,26 @@ use futures::stream::StreamExt;
 mod helpers;
 
 fn main() {
-    let (tx, mut rx) = channel(0);
-    task::spawn(boring("boring!", tx));
+    let (sender, mut receiver) = channel(0);
+    task::spawn(boring("boring!", sender));
 
     task::block_on(async {
         for _ in 0i32..5 {
-            println!("You say: {}", rx.next().await.expect("Receiving failed"));
+            println!(
+                "You say: {}",
+                receiver.next().await.expect("Receiving failed")
+            );
         }
     });
 
     println!("You're boring; I'm leaving.");
 }
 
-async fn boring(msg: &str, mut tx: Sender<String>) {
+async fn boring(msg: &str, mut sender: Sender<String>) {
     for i in 0i32.. {
         let msg_i = format!("{} {}", msg, i);
-        tx.send(msg_i)
+        sender
+            .send(msg_i)
             .await
             .expect("Failed to send message to channel");
         task::sleep(helpers::rand_duration(0, 1000)).await;

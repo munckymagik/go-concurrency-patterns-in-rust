@@ -28,38 +28,39 @@ fn main() {
 }
 
 fn fan_in<T: 'static + Send>(mut input1: Receiver<T>, mut input2: Receiver<T>) -> Receiver<T> {
-    let (mut tx, rx) = channel(0);
-    let mut tx2 = tx.clone();
+    let (mut sender, receiver) = channel(0);
+    let mut sender2 = sender.clone();
 
     task::spawn(async move {
         loop {
             let msg = input1.next().await.expect("input1 recv failed");
-            tx.send(msg).await.expect("input1 send failed");
+            sender.send(msg).await.expect("input1 send failed");
         }
     });
     task::spawn(async move {
         loop {
             let msg = input2.next().await.expect("input2 recv failed");
-            tx2.send(msg).await.expect("input2 send failed");
+            sender2.send(msg).await.expect("input2 send failed");
         }
     });
 
-    rx
+    receiver
 }
 
 fn boring(message: &str) -> Receiver<String> {
     let message_for_closure = message.to_owned();
-    let (mut tx, rx) = channel(0);
+    let (mut sender, receiver) = channel(0);
 
     task::spawn(async move {
         for i in 0i32.. {
             let msg = format!("{} {}", message_for_closure, i);
-            tx.send(msg)
+            sender
+                .send(msg)
                 .await
                 .expect("Failed to send message to channel");
             task::sleep(helpers::rand_duration(0, 1000)).await;
         }
     });
 
-    rx
+    receiver
 }

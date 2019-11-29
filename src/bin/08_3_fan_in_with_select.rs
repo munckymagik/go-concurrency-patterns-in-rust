@@ -36,8 +36,8 @@ fn main() {
 
             if i < 9 {
                 // Send the continuation messages.
-                msg1.tx_continue.send(true).await.expect("msg1");
-                msg2.tx_continue.send(true).await.expect("msg2");
+                msg1.sender_continue.send(true).await.expect("msg1");
+                msg2.sender_continue.send(true).await.expect("msg2");
             }
         }
     });
@@ -46,19 +46,19 @@ fn main() {
 }
 
 fn fan_in<T: 'static + Send>(mut input1: Receiver<T>, mut input2: Receiver<T>) -> Receiver<T> {
-    let (mut tx, rx) = channel(0);
+    let (mut sender, receiver) = channel(0);
 
     // Only one task is needed now we are using `select!`
     task::spawn(async move {
         loop {
             select! {
-                msg = input1.select_next_some() => tx.send(msg).await.expect("send1 in fan_in"),
-                msg = input2.select_next_some() => tx.send(msg).await.expect("send2 in fan_in"),
+                msg = input1.select_next_some() => sender.send(msg).await.expect("send1 in fan_in"),
+                msg = input2.select_next_some() => sender.send(msg).await.expect("send2 in fan_in"),
             }
         }
     });
 
-    rx
+    receiver
 }
 
 struct Message {
@@ -66,31 +66,31 @@ struct Message {
     message: String,
     /// The producing thread will block until the receiving thread sends a continuation message
     /// over this channel
-    tx_continue: Sender<bool>,
+    sender_continue: Sender<bool>,
 }
 
 fn boring(message: &str) -> Receiver<Message> {
     let message_for_closure = message.to_owned();
-    let (mut tx, rx) = channel(0);
+    let (mut sender, receiver) = channel(0);
 
     // Sets the buffer size to 0 to create a 'rendezvous' channel.
-    let (tx_continue, mut rx_continue) = channel(0);
+    let (sender_continue, mut receiver_continue) = channel(0);
 
     task::spawn(async move {
         for i in 0i32.. {
             let msg = Message {
                 message: format!("{} {}", message_for_closure, i),
-                tx_continue: tx_continue.to_owned(),
+                sender_continue: sender_continue.to_owned(),
             };
 
-            tx.send(msg).await.expect("boring send");
+            sender.send(msg).await.expect("boring send");
 
             task::sleep(helpers::rand_duration(0, 1000)).await;
 
             // Pause here until the receiver has sent a continuation message
-            rx_continue.next().await.expect("boring wait");
+            receiver_continue.next().await.expect("boring wait");
         }
     });
 
-    rx
+    receiver
 }

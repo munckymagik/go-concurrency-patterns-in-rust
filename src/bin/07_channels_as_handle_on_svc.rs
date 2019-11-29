@@ -28,17 +28,18 @@ fn main() {
 
 fn boring(message: &str) -> Receiver<String> {
     let message_for_closure = message.to_owned();
-    let (mut tx, rx) = channel(0);
+    let (mut sender, receiver) = channel(0);
 
     task::spawn(async move {
         for i in 0i32.. {
             let msg = format!("{} {}", message_for_closure, i);
-            tx.send(msg)
+            sender
+                .send(msg)
                 .await
                 .expect("Failed to send message to channel");
             task::sleep(helpers::rand_duration(0, 1000)).await;
         }
     });
 
-    rx
+    receiver
 }

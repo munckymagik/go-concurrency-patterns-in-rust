@@ -14,8 +14,8 @@ use rand::{thread_rng, Rng};
 mod helpers;
 
 fn main() {
-    let (mut quit_tx, quit_rx) = channel(0);
-    let mut c = boring("Joe", quit_rx);
+    let (mut quit_sender, quit_receiver) = channel(0);
+    let mut c = boring("Joe", quit_receiver);
 
     task::block_on(async {
         for _ in 0i32..(thread_rng().gen_range(1, 10)) {
@@ -23,22 +23,22 @@ fn main() {
         }
 
         println!("main: telling Joe to quit ...");
-        quit_tx.send(()).await.expect("sending quit");
+        quit_sender.send(()).await.expect("sending quit");
 
         println!("main: bye!");
     });
 }
 
-fn boring(message: &str, mut quit_rx: Receiver<()>) -> Receiver<String> {
+fn boring(message: &str, mut quit_receiver: Receiver<()>) -> Receiver<String> {
     let message_for_closure = message.to_owned();
-    let (mut tx, rx) = channel(0);
+    let (mut sender, receiver) = channel(0);
 
     task::spawn(async move {
         for i in 0i32.. {
             let msg = format!("{} {}", message_for_closure, i);
             select! {
-                _ = tx.send(msg).fuse() => { /* do nothing */ },
-                _ = quit_rx.next() => {
+                _ = sender.send(msg).fuse() => { /* do nothing */ },
+                _ = quit_receiver.next() => {
                     println!("{}: pretending to clear up ... ok bye!", message_for_closure);
                     return
                 },
@@ -47,5 +47,5 @@ fn boring(message: &str, mut quit_rx: Receiver<()>) -> Receiver<String> {
         }
     });
 
-    rx
+    receiver
 }

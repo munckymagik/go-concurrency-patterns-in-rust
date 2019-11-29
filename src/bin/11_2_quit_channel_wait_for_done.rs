@@ -25,8 +25,8 @@ use rand::{thread_rng, Rng};
 mod helpers;
 
 fn main() {
-    let (quit_tx, quit_rx) = channel(0);
-    let (finished, mut c) = boring("Joe", quit_rx);
+    let (quit_sender, quit_receiver) = channel(0);
+    let (finished, mut c) = boring("Joe", quit_receiver);
 
     task::block_on(async {
         for _ in 0i32..(thread_rng().gen_range(1, 10)) {
@@ -34,8 +34,8 @@ fn main() {
         }
 
         println!("main: telling Joe to quit ...");
-        drop(quit_tx); // dropping the sender will signal to the receiver that
-                       // communication on the channel has finished.
+        drop(quit_sender); // dropping the sender will signal to the receiver that
+                           // communication on the channel has finished.
 
         println!("main: waiting for Joe to clear up ...");
         let final_words = finished.await;
@@ -43,19 +43,22 @@ fn main() {
     });
 }
 
-fn boring(message: &str, mut quit_rx: Receiver<()>) -> (JoinHandle<String>, Receiver<String>) {
+fn boring(
+    message: &str,
+    mut quit_receiver: Receiver<()>,
+) -> (JoinHandle<String>, Receiver<String>) {
     let message_for_closure = message.to_owned();
-    let (mut tx, rx) = channel(0);
+    let (mut sender, receiver) = channel(0);
 
     let handle = task::spawn(async move {
         for i in 0i32.. {
             let msg = format!("{} {}", message_for_closure, i);
             select! {
-                _ = tx.send(msg).fuse() => { /* do nothing */ },
+                _ = sender.send(msg).fuse() => { /* do nothing */ },
 
                 // When main drops the sender, next() returns `None` to mark
                 // the end of communication
-                _ = quit_rx.next() => {
+                _ = quit_receiver.next() => {
                     break;
                 },
             }
@@ -66,5 +69,5 @@ fn boring(message: &str, mut quit_rx: Receiver<()>) -> (JoinHandle<String>, Rece
         "See you!".to_owned() // This will be returned to main
     });
 
-    (handle, rx)
+    (handle, receiver)
 }

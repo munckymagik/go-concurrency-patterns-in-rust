@@ -11,30 +11,36 @@ use futures::stream::StreamExt;
 mod helpers;
 
 fn main() {
-    let mut rx = boring("boring!"); // function returning a channel
+    let mut receiver = boring("boring!"); // function returning a channel
 
     task::block_on(async {
         for _ in 0i32..5 {
-            println!("You say: {}", rx.next().await.expect("Receiving failed"));
+            println!(
+                "You say: {}",
+                receiver.next().await.expect("Receiving failed")
+            );
         }
     });
 
     println!("You're boring; I'm leaving.");
 }
 
-fn boring(message: &str) -> Receiver<String> { // returns a receiver for a channel of Strings
+fn boring(message: &str) -> Receiver<String> {
+    // returns a receiver for a channel of Strings
     let message_for_closure = message.to_owned();
-    let (mut tx, rx) = channel(0);
+    let (mut sender, receiver) = channel(0);
 
-    task::spawn(async move { // we launch an async task from within the function
+    // we launch an async task from within the function
+    task::spawn(async move {
         for i in 0i32.. {
             let msg = format!("{} {}", message_for_closure, i);
-            tx.send(msg)
+            sender
+                .send(msg)
                 .await
                 .expect("Failed to send message to channel");
             task::sleep(helpers::rand_duration(0, 1000)).await;
         }
     });
 
-    rx // return the receiver to the caller
+    receiver // return the receiver to the caller
 }
