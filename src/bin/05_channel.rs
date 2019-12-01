@@ -13,8 +13,8 @@
 //! When the main function executes `receiver.next().await`, it will wait for a message to exist in the channel.
 //!
 //! Similarly, when the boring function executes `sender.send(msg_i).await`, it waits until the
-//! message has been fully queued into the channel. Because we are using a bounded channel it will wait until any
-//! previous message has been read.
+//! message has been fully queued into the channel. Because we are using a bounded channel with space for single
+//! message, any subsequent sends will need to wait until the previous message has been read.
 //!
 //! A sender and receiver must both be ready to play their part in the communication. Otherwise we wait until they are.
 //!
