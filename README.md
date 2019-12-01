@@ -142,6 +142,12 @@ Instructions for running and browsing follow:
 * Run: `cargo run --bin 13_3_fake_google_search_timeout`
 * [View source](src/bin/13_3_fake_google_search_timeout.rs)
 
+### 13_4_fake_google_search_replication
+
+TODO I'm still to complete this.
+
+* [Rob's slide](https://talks.golang.org/2012/concurrency.slide#48)
+
 ## Browsing the docs for the examples as `rustdoc`
 
 To generate `rustdoc` HTML documentation:
