@@ -25,22 +25,24 @@ use rand::{thread_rng, Rng};
 mod helpers;
 
 fn main() {
+    task::block_on(async_main());
+}
+
+async fn async_main() {
     let (quit_sender, quit_receiver) = channel(0);
     let (finished, mut c) = boring("Joe", quit_receiver);
 
-    task::block_on(async {
-        for _ in 0i32..(thread_rng().gen_range(1, 10)) {
-            println!("{}", c.next().await.unwrap());
-        }
+    for _ in 0i32..(thread_rng().gen_range(1, 10)) {
+        println!("{}", c.next().await.unwrap());
+    }
 
-        println!("main: telling Joe to quit ...");
-        drop(quit_sender); // dropping the sender will signal to the receiver that
-                           // communication on the channel has finished.
+    println!("main: telling Joe to quit ...");
+    drop(quit_sender); // dropping the sender will signal to the receiver that
+                       // communication on the channel has finished.
 
-        println!("main: waiting for Joe to clear up ...");
-        let final_words = finished.await;
-        println!("main: Joe says '{}'", final_words);
-    });
+    println!("main: waiting for Joe to clear up ...");
+    let final_words = finished.await;
+    println!("main: Joe says '{}'", final_words);
 }
 
 fn boring(

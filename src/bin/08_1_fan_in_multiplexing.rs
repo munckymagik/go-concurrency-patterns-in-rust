@@ -13,16 +13,18 @@ use futures::stream::StreamExt;
 mod helpers;
 
 fn main() {
+    task::block_on(async_main());
+}
+
+async fn async_main() {
     let mut c = fan_in(boring("Joe"), boring("Ann"));
 
-    task::block_on(async {
-        for _ in 0i32..10 {
-            match c.next().await {
-                Some(msg) => println!("{}", msg),
-                None => break,
-            };
-        }
-    });
+    for _ in 0i32..10 {
+        match c.next().await {
+            Some(msg) => println!("{}", msg),
+            None => break,
+        };
+    }
 
     println!("You're both boring; I'm leaving.");
 }

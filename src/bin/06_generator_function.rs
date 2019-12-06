@@ -11,16 +11,18 @@ use futures::stream::StreamExt;
 mod helpers;
 
 fn main() {
+    task::block_on(async_main());
+}
+
+async fn async_main() {
     let mut receiver = boring("boring!"); // function returning a channel
 
-    task::block_on(async {
-        for _ in 0i32..5 {
-            println!(
-                "You say: {}",
-                receiver.next().await.expect("receiving failed")
-            );
-        }
-    });
+    for _ in 0i32..5 {
+        println!(
+            "You say: {}",
+            receiver.next().await.expect("receiving failed")
+        );
+    }
 
     println!("You're boring; I'm leaving.");
 }
