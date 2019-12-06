@@ -17,21 +17,23 @@ use std::time;
 mod helpers;
 
 fn main() {
+    task::block_on(async_main());
+}
+
+async fn async_main() {
     let mut c = boring("Joe");
     let mut timeout = timeout_after(5000);
 
-    task::block_on(async {
-        // The loop will iterate printing Joe's messages until the overall timeout occurs.
-        loop {
-            select! {
-                s = c.next() => println!("{}", s.unwrap()),
-                _ = timeout => {
-                    println!("You talk too much.");
-                    return;
-                },
-            }
+    // The loop will iterate printing Joe's messages until the overall timeout occurs.
+    loop {
+        select! {
+            s = c.next() => println!("{}", s.unwrap()),
+            _ = timeout => {
+                println!("You talk too much.");
+                return;
+            },
         }
-    });
+    }
 }
 
 fn timeout_after(ms: u64) -> impl FusedFuture {

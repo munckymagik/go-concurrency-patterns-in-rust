@@ -79,12 +79,14 @@ fn timeout_after(ms: u64) -> impl FusedFuture {
 }
 
 fn main() {
-    task::block_on(async {
-        let start = time::Instant::now();
-        let results = google("rust lang").await;
-        let elapsed = start.elapsed();
+    task::block_on(async_main());
+}
 
-        println!("Result: {:#?}", results);
-        println!("Elapsed: {}ms", helpers::to_millis(elapsed));
-    })
+async fn async_main() {
+    let start = time::Instant::now();
+    let results = google("rust lang").await;
+    let elapsed = start.elapsed();
+
+    println!("Result: {:#?}", results);
+    println!("Elapsed: {}ms", helpers::to_millis(elapsed));
 }

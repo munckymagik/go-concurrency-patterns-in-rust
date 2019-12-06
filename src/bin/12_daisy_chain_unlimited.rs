@@ -19,39 +19,41 @@ async fn f(mut left: Sender<i64>, mut right: Receiver<i64>) {
 }
 
 fn main() {
+    task::block_on(async_main());
+}
+
+async fn async_main() {
     let n = 10_000; // Hurray! We are no longer constrained by the OS max threads limit
 
-    task::block_on(async {
-        // We will receive the final count from the leftmost_receiver. As we build
-        // the chain rightmost_sender will be continually updated to point to the
-        // furthest front of the chain, until finally it points to the start of the
-        // chain.
-        let (mut rightmost_sender, mut leftmost_receiver) = channel(0);
+    // We will receive the final count from the leftmost_receiver. As we build
+    // the chain rightmost_sender will be continually updated to point to the
+    // furthest front of the chain, until finally it points to the start of the
+    // chain.
+    let (mut rightmost_sender, mut leftmost_receiver) = channel(0);
 
-        for _ in 1..n {
-            // Create a channel. This will form the connection between one link in
-            // the chain and the next.
-            let (next_sender, this_receiver) = channel(0);
+    for _ in 1..n {
+        // Create a channel. This will form the connection between one link in
+        // the chain and the next.
+        let (next_sender, this_receiver) = channel(0);
 
-            // Create a task for this link in the chain.
-            task::spawn(f(rightmost_sender, this_receiver));
+        // Create a task for this link in the chain.
+        task::spawn(f(rightmost_sender, this_receiver));
 
-            // Update rightmost_sender to point to the front of the chain so we can
-            // connect it to the next link in the chain in the next iteration of
-            // the loop.
-            rightmost_sender = next_sender;
-        }
+        // Update rightmost_sender to point to the front of the chain so we can
+        // connect it to the next link in the chain in the next iteration of
+        // the loop.
+        rightmost_sender = next_sender;
+    }
 
-        // Start passing the message through the chain
-        task::spawn(async move { rightmost_sender.send(1).await });
+    // Start passing the message through the chain
+    task::spawn(async move { rightmost_sender.send(1).await });
 
-        // Await then print the final value from the chain
-        println!(
-            "{}",
-            leftmost_receiver
-                .next()
-                .await
-                .expect("receiving final value")
-        );
-    });
+    // Await then print the final value from the chain
+    println!(
+        "{}",
+        leftmost_receiver
+            .next()
+            .await
+            .expect("receiving final value")
+    );
 }

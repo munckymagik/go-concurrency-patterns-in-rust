@@ -14,19 +14,21 @@ use rand::{thread_rng, Rng};
 mod helpers;
 
 fn main() {
+    task::block_on(async_main());
+}
+
+async fn async_main() {
     let (mut quit_sender, quit_receiver) = channel(0);
     let mut c = boring("Joe", quit_receiver);
 
-    task::block_on(async {
-        for _ in 0i32..(thread_rng().gen_range(1, 10)) {
-            println!("{}", c.next().await.unwrap());
-        }
+    for _ in 0i32..(thread_rng().gen_range(1, 10)) {
+        println!("{}", c.next().await.unwrap());
+    }
 
-        println!("main: telling Joe to quit ...");
-        quit_sender.send(()).await.expect("sending quit");
+    println!("main: telling Joe to quit ...");
+    quit_sender.send(()).await.expect("sending quit");
 
-        println!("main: bye!");
-    });
+    println!("main: bye!");
 }
 
 fn boring(message: &str, mut quit_receiver: Receiver<()>) -> Receiver<String> {

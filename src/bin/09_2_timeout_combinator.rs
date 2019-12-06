@@ -17,21 +17,23 @@ use std::time;
 mod helpers;
 
 fn main() {
+    task::block_on(async_main());
+}
+
+async fn async_main() {
     let mut c = boring("Joe");
     let duration = time::Duration::from_millis(500);
 
-    task::block_on(async {
-        loop {
-            // In each loop, Joe has up to 500 ms to respond or the program times-out.
-            match timeout(duration, c.next()).await {
-                Ok(s) => println!("{}", s.unwrap()),
-                Err(TimeoutError { .. }) => {
-                    println!("You're too slow.");
-                    return;
-                }
+    loop {
+        // In each loop, Joe has up to 500 ms to respond or the program times-out.
+        match timeout(duration, c.next()).await {
+            Ok(s) => println!("{}", s.unwrap()),
+            Err(TimeoutError { .. }) => {
+                println!("You're too slow.");
+                return;
             }
         }
-    });
+    }
 }
 
 fn boring(message: &str) -> Receiver<String> {

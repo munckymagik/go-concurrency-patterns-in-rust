@@ -13,15 +13,17 @@ use futures::stream::StreamExt;
 mod helpers;
 
 fn main() {
+    task::block_on(async_main());
+}
+
+async fn async_main() {
     let mut joe = boring("Joe"); // first service
     let mut ann = boring("Ann"); // second service
 
-    task::block_on(async {
-        for _ in 0i32..5 {
-            println!("{}", joe.next().await.expect("receiving joe failed"));
-            println!("{}", ann.next().await.expect("receiving ann failed"));
-        }
-    });
+    for _ in 0i32..5 {
+        println!("{}", joe.next().await.expect("receiving joe failed"));
+        println!("{}", ann.next().await.expect("receiving ann failed"));
+    }
 
     println!("You're both boring; I'm leaving.");
 }

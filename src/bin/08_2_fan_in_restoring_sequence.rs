@@ -24,22 +24,24 @@ struct Message {
 }
 
 fn main() {
+    task::block_on(async_main());
+}
+
+async fn async_main() {
     let mut c = fan_in(boring("Joe"), boring("Ann"));
 
-    task::block_on(async {
-        for _ in 0i32..10 {
-            // Retrieve 2 messages at a time from queue
-            let mut msg1 = c.next().await.expect("msg1");
-            let mut msg2 = c.next().await.expect("msg2");
+    for _ in 0i32..10 {
+        // Retrieve 2 messages at a time from queue
+        let mut msg1 = c.next().await.expect("msg1");
+        let mut msg2 = c.next().await.expect("msg2");
 
-            println!("{}", msg1.message);
-            println!("{}", msg2.message);
+        println!("{}", msg1.message);
+        println!("{}", msg2.message);
 
-            // Send the continuation messages. Each speaker must wait for a go-ahead.
-            msg1.sender_continue.send(true).await.expect("msg1");
-            msg2.sender_continue.send(true).await.expect("msg2");
-        }
-    });
+        // Send the continuation messages. Each speaker must wait for a go-ahead.
+        msg1.sender_continue.send(true).await.expect("msg1");
+        msg2.sender_continue.send(true).await.expect("msg2");
+    }
 
     println!("You're both boring; I'm leaving.");
 }

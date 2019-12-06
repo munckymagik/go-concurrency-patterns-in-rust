@@ -19,22 +19,24 @@ use std::time;
 mod helpers;
 
 fn main() {
+    task::block_on(async_main());
+}
+
+async fn async_main() {
     let mut c = boring("Joe");
 
-    task::block_on(async {
-        loop {
-            // In each loop, Joe has up to 500 ms to respond or the programme times-out.
-            let mut timeout = timeout_after(500);
+    loop {
+        // In each loop, Joe has up to 500 ms to respond or the programme times-out.
+        let mut timeout = timeout_after(500);
 
-            select! {
-                s = c.next() => println!("{}", s.unwrap()),
-                _ = timeout => {
-                    println!("You're too slow.");
-                    return;
-                },
-            }
+        select! {
+            s = c.next() => println!("{}", s.unwrap()),
+            _ = timeout => {
+                println!("You're too slow.");
+                return;
+            },
         }
-    });
+    }
 }
 
 fn timeout_after(ms: u64) -> impl FusedFuture {
