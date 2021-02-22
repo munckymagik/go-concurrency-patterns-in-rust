@@ -5,10 +5,10 @@ authors = ["Dan Munckton <dangit@munckfish.net>"]
 edition = "2018"
 
 [dependencies]
-rand = "0.7.2"
-futures = "0.3.1"
-futures-timer = "2.0.2"
+rand = "0.8.3"
+futures = "0.3.12"
+futures-timer = "3.0.2"
 
 [dependencies.async-std]
-version = "1.2.0"
+version = "1.9.0"
 features = ["unstable"]

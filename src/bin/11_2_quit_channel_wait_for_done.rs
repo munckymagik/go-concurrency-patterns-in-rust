@@ -32,7 +32,7 @@ async fn async_main() {
     let (quit_sender, quit_receiver) = channel(0);
     let (finished, mut c) = boring("Joe", quit_receiver);
 
-    for _ in 0i32..(thread_rng().gen_range(1, 10)) {
+    for _ in 0i32..(thread_rng().gen_range(1..10)) {
         println!("{}", c.next().await.unwrap());
     }
 

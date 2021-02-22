@@ -4,7 +4,7 @@ use rand::{thread_rng, Rng};
 use std::time;
 
 pub fn rand_duration(from_ms: u64, to_ms: u64) -> time::Duration {
-    let dur_ms = thread_rng().gen_range(from_ms, to_ms);
+    let dur_ms = thread_rng().gen_range(from_ms..to_ms);
     time::Duration::from_millis(dur_ms)
 }
 
